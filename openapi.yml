@@ -1,0 +1,140 @@
+openapi: 3.0.1
+info:
+  title: Points Dashboard
+  description: 'a coding exercise'
+  contact:
+    email: andrewfulrich@gmail.com
+  license:
+    name: UNLICENSED
+  version: 1.0.0
+servers:
+- url: http://localhost:3000/api
+paths:
+  /customers:
+    get:
+      summary: Get a list of customers
+      operationId: getCustomers
+      responses:
+          200:
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Customers'
+  /transactions/{customerId}:
+    get:
+      summary: Get a list of transactions given a customer
+      parameters:
+        - in: path
+          name: customerId
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the customer to get
+      operationId: getTransactions
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                description: a month-by-month collection of transactions over the last 3 months
+                items:
+                  type: object
+                  properties:
+                    month:
+                      type: string
+                      enum:
+                        - January
+                        - February
+                        - March
+                        - April
+                        - May
+                        - June
+                        - July
+                        - August
+                        - September
+                        - October
+                        - November
+                        - December
+                    totalForMonth:
+                      type: integer
+                    transactions:
+                      $ref: '#/components/schemas/Transaction'
+                  required:
+                    - month
+                    - transactions
+        404:
+          description: no customer found with that id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+        422:
+          description: validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+components:
+  schemas:
+    Customers:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+            description: the unique customer id
+          name:
+            type: string
+            description: the customer's name
+        required:
+          - id
+          - name    
+    Transaction:
+      type: object
+      properties:
+        createdAt:
+          type: string
+          format: date
+        pointsEarned:
+          type: integer
+          minimum: 0
+        itemsPurchased:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              price:
+                type: number
+                minimum: 0
+                multipleOf: 0.01
+            required:
+              - name
+              - price
+          minItems: 0
+        totalSpent:
+            type: number
+            minimum: 0
+            multipleOf: 0.01
+      required:
+        - customerId
+        - createdAt
+        - pointsEarned
+        - itemsPurchased
+    ValidationError:
+      type: object
+      properties:
+        message:
+          type: string
+          description: a description of why the input was invalid
+    NotFoundError:
+      type: object
+      properties:
+        message:
+          type: string
+          description: a message explaining this error
